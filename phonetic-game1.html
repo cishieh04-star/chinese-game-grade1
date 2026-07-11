@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>拼音挑戰</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        * { box-sizing: border-box; touch-action: manipulation; }
+        body { font-family: 'PingFang TC', sans-serif; background-color: #fdf6e3; display: flex; flex-direction: column; align-items: center; height: 100vh; margin: 0; padding: 5px; overflow: hidden; }
+        .header-container { width: 100%; max-width: 500px; display: flex; justify-content: center; align-items: center; padding: 5px; position: relative; }
+        .title-text { font-size: 22px; font-weight: bold; margin: 0; }
+        #timer { position: absolute; right: 10px; font-size: 16px; font-weight: bold; color: #2e7d32; background: white; padding: 2px 8px; border-radius: 6px; border: 1px solid #ccc; }
+        .card { width: 100%; max-width: 500px; background: white; padding: 10px; border-radius: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; }
+        .controls { display: flex; justify-content: center; gap: 10px; margin-bottom: 10px; }
+        .btn-action { padding: 8px 15px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; font-size: 14px; color: white; }
+        .btn-video { background-color: #f57c00; }
+        .btn-hint { background-color: #1976d2; }
+        #word-display { font-size: 35px; font-weight: bold; margin: 5px 0; }
+        .zhuyin-slots { display: flex; gap: 8px; justify-content: center; margin: 10px 0; height: 45px; }
+        .slot { width: 45px; height: 45px; border: 2px solid #8b4513; display: flex; align-items: center; justify-content: center; font-size: 22px; border-radius: 6px; }
+        .options { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-top: 10px; }
+        .btn-opt { padding: 8px; border: 1px solid #8b4513; background: #fff; cursor: pointer; border-radius: 5px; font-size: 16px; }
+        #restart-game-btn { display: none; padding: 10px 20px; font-size: 16px; background: #2e7d32; color: white; border: none; border-radius: 8px; cursor: pointer; }
+        .bg-filled { background-color: #ffffff; }
+        .bg-empty { background-color: #e0d0b0; }
+    </style>
+</head>
+<body>
+
+<div class="header-container">
+    <h1 class="title-text">拼音挑戰</h1>
+    <div id="timer">0</div>
+</div>
+
+<div class="card">
+    <div id="game-ui">
+        <div class="controls">
+            <button class="btn-action btn-video" onclick="window.open('https://www.youtube.com/shorts/UXAfiCNoHwc', '_blank')">觀看影片</button>
+            <button class="btn-action btn-hint" onclick="showFullPinyin()">提示</button>
+        </div>
+        <div id="word-display"></div>
+        <div class="zhuyin-slots" id="zhuyin-slots"></div>
+        <div class="options" id="options"></div>
+    </div>
+    <button id="restart-game-btn" onclick="location.reload()">再玩一次</button>
+</div>
+
+<script>
+    // 換成更有彈性的卡通「Boing」音效
+    const clickSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2573/2573-preview.mp3');
+    
+    function playClick() {
+        clickSound.currentTime = 0;
+        clickSound.volume = 0.5;
+        clickSound.play();
+        // 聲音維持短促
+        setTimeout(() => { clickSound.pause(); clickSound.currentTime = 0; }, 250);
+    }
+
+    const items = [
+        { word: "粉", pinyin: ["ㄈ", "ㄣ", "ˇ"] }, { word: "筆", pinyin: ["ㄅ", "ㄧ", "ˇ"] },
+        { word: "鉛", pinyin: ["ㄑ", "ㄧ", "ㄢ"] }, { word: "筆", pinyin: ["ㄅ", "ㄧ", "ˇ"] },
+        { word: "原", pinyin: ["ㄩ", "ㄢ", "ˊ"] }, { word: "子", pinyin: ["ㄗ", "ˇ"] }, { word: "筆", pinyin: ["ㄅ", "ㄧ", "ˇ"] },
+        { word: "橡", pinyin: ["ㄒ", "ㄧ", "ㄤ", "ˋ"] }, { word: "皮", pinyin: ["ㄆ", "ㄧ", "ˊ"] }, { word: "擦", pinyin: ["ㄘ", "ㄚ"] },
+        { word: "釘", pinyin: ["ㄉ", "ㄧ", "ㄥ", "ˋ"] }, { word: "書", pinyin: ["ㄕ", "ㄨ"] }, { word: "機", pinyin: ["ㄐ", "ㄧ"] }
+    ];
+    
+    const symbols = ["ㄅ", "ㄆ", "ㄇ", "ㄈ", "ㄉ", "ㄊ", "ㄋ", "ㄌ", "ㄍ", "ㄎ", "ㄏ", "ㄐ", "ㄑ", "ㄒ", "ㄓ", "ㄔ", "ㄕ", "ㄖ", "ㄗ", "ㄘ", "ㄙ", "ㄚ", "ㄛ", "ㄜ", "ㄝ", "ㄞ", "ㄟ", "ㄠ", "ㄡ", "ㄢ", "ㄣ", "ㄤ", "ㄥ", "ㄦ", "ㄧ", "ㄨ", "ㄩ"];
+    const tones = ["˙", "ˊ", "ˇ", "ˋ", "¯"];
+
+    let currentIdx = 0, userInput = [], seconds = 0, timerStarted = false, timerInterval;
+
+    function initGame() {
+        if (currentIdx >= items.length) {
+            document.getElementById('game-ui').style.display = 'none';
+            document.getElementById('restart-game-btn').style.display = 'inline-block';
+            document.getElementById('word-display').innerText = "挑戰完成！";
+            clearInterval(timerInterval);
+            return;
+        }
+        
+        const item = items[currentIdx];
+        document.getElementById('word-display').innerText = item.word;
+        
+        const container = document.getElementById('zhuyin-slots');
+        container.innerHTML = '';
+        userInput = new Array(item.pinyin.length).fill(null);
+        
+        item.pinyin.forEach((_, i) => {
+            const div = document.createElement('div');
+            div.className = 'slot bg-empty';
+            div.id = `slot-${i}`;
+            container.appendChild(div);
+        });
+        renderOptions();
+    }
+
+    function renderOptions() {
+        const optDiv = document.getElementById('options');
+        optDiv.innerHTML = '';
+        let pool = [...new Set(items[currentIdx].pinyin)];
+        let symDistractors = symbols.filter(s => !pool.includes(s)).sort(() => 0.5 - Math.random()).slice(0, 5);
+        let toneDistractors = tones.filter(t => !pool.includes(t)).sort(() => 0.5 - Math.random()).slice(0, 3);
+        pool.push(...symDistractors, ...toneDistractors);
+        pool.sort(() => Math.random() - 0.5);
+        pool.forEach(char => {
+            const btn = document.createElement('button');
+            btn.className = 'btn-opt';
+            btn.innerText = char;
+            btn.onclick = () => {
+                playClick();
+                handleInput(char);
+            };
+            optDiv.appendChild(btn);
+        });
+    }
+
+    function handleInput(char) {
+        if (!timerStarted) {
+            timerStarted = true;
+            timerInterval = setInterval(() => { seconds++; document.getElementById('timer').innerText = seconds; }, 1000);
+        }
+        let nextIdx = userInput.indexOf(null);
+        if (nextIdx !== -1 && char === items[currentIdx].pinyin[nextIdx]) {
+            userInput[nextIdx] = char;
+            const slot = document.getElementById(`slot-${nextIdx}`);
+            slot.innerText = char;
+            slot.classList.replace('bg-empty', 'bg-filled');
+            if (userInput.every(x => x !== null)) {
+                confetti({ particleCount: 80, spread: 50, origin: { y: 0.6 } });
+                window.speechSynthesis.speak(new SpeechSynthesisUtterance("太棒了"));
+                setTimeout(() => {
+                    currentIdx++;
+                    initGame();
+                }, 1000);
+            }
+        }
+    }
+
+    function showFullPinyin() {
+        items[currentIdx].pinyin.forEach((char, i) => {
+            const slot = document.getElementById(`slot-${i}`);
+            if(slot) {
+                slot.innerText = char;
+                slot.classList.replace('bg-empty', 'bg-filled');
+            }
+        });
+        setTimeout(() => {
+            userInput.forEach((val, i) => {
+                if(val === null) {
+                    const slot = document.getElementById(`slot-${i}`);
+                    if(slot) {
+                        slot.innerText = '';
+                        slot.classList.replace('bg-filled', 'bg-empty');
+                    }
+                }
+            });
+        }, 5000);
+    }
+    initGame();
+</script>
+</body>
+</html>
