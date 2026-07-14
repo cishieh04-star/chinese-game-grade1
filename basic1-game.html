@@ -17,34 +17,47 @@
 <body>
 
 <div class="card">
-    <button class="btn-main" onclick="playQuestion()">🔊 點擊聆聽題目</button>
-    <button class="btn-main btn-retry" onclick="playQuestion()">🔄 再聽一次</button>
+    <button class="btn-main" onclick="playAudio()">🔊 點擊聆聽題目</button>
+    <button class="btn-main btn-retry" onclick="playAudio()">🔄 再聽一次</button>
     <div class="options" id="options"></div>
 </div>
 
 <script>
-    // 定義題目與對應音檔
-    const questions = [
-        { char: "ㄅ", audio: "ㄅ.mp3" }, 
-        { char: "ㄆ", audio: "ㄆ.mp3" },
-        // ...請繼續補完你的題目陣列
+    // 你的音檔名稱是 basic-1.mp3
+    // 注意：這裡假設 basic-1.mp3 包含了ㄅ到ㄙ的順序，我們利用時間軸來播放
+    const audio = new Audio('basic-1.mp3');
+    
+    // 從你之前解析出的 JSON 時間軸資料
+    const zhuyinData = [
+        {"symbol": "ㄅ", "start": 0.066, "end": 4.233},
+        {"symbol": "ㄆ", "start": 4.766, "end": 9.666},
+        {"symbol": "ㄇ", "start": 11.200, "end": 14.833},
+        {"symbol": "ㄈ", "start": 15.933, "end": 19.600}
+        // ...這裡可以繼續補完你所有的資料
     ];
 
     let currentQ = 0;
-    const allChars = ["ㄅ", "ㄆ", "ㄇ", "ㄈ", "ㄉ", "ㄊ", "ㄋ", "ㄌ"]; 
 
-    function playQuestion() {
-        new Audio(questions[currentQ].audio).play();
+    function playAudio() {
+        // 播放當前符號對應的時間段
+        audio.currentTime = zhuyinData[currentQ].start;
+        audio.play();
+        
+        // 設定定時器，在結束點暫停
+        setTimeout(() => {
+            audio.pause();
+        }, (zhuyinData[currentQ].end - zhuyinData[currentQ].start) * 1000);
     }
 
     function renderOptions() {
         const optDiv = document.getElementById('options');
         optDiv.innerHTML = '';
         
-        // 隨機選出 4 個選項
-        let choices = [questions[currentQ].char];
+        // 隨機選出 4 個注音作為選項
+        const allSymbols = ["ㄅ", "ㄆ", "ㄇ", "ㄈ", "ㄉ", "ㄊ", "ㄋ", "ㄌ"]; 
+        let choices = [zhuyinData[currentQ].symbol];
         while(choices.length < 4) {
-            let r = allChars[Math.floor(Math.random() * allChars.length)];
+            let r = allSymbols[Math.floor(Math.random() * allSymbols.length)];
             if(!choices.includes(r)) choices.push(r);
         }
         choices.sort(() => Math.random() - 0.5);
@@ -59,15 +72,16 @@
     }
 
     function check(val) {
-        if(val === questions[currentQ].char) {
+        if(val === zhuyinData[currentQ].symbol) {
             confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+            // 答對的音效 (請確認你有一個 good.mp3 檔案)
             new Audio('good.mp3').play(); 
             setTimeout(() => { 
-                currentQ = (currentQ + 1) % questions.length; 
+                currentQ = (currentQ + 1) % zhuyinData.length; 
                 renderOptions(); 
             }, 1500);
         } else {
-            alert("再試一次！");
+            alert("再聽一次喔！");
         }
     }
 
