@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>自動化注音聽力練習</title>
+    <title>注音聽力練習</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; background-color: #fdf6e3; height: 100vh; margin: 0; padding-top: 20px; }
         .card { width: 90%; max-width: 400px; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; }
         .btn-main { padding: 15px; font-size: 20px; background: #2196f3; color: white; border: none; border-radius: 15px; margin: 5px; cursor: pointer; width: 45%; }
-        .btn-hint { background: #7b1fa2; }
         .target-hint { font-size: 80px; font-weight: bold; color: #d84315; height: 100px; margin: 10px; }
         .options { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
         .btn-opt { padding: 20px; font-size: 35px; border: 2px solid #5d4037; border-radius: 15px; background: white; cursor: pointer; }
@@ -20,39 +19,35 @@
 <div class="card">
     <div id="hint-display" class="target-hint"></div>
     <button class="btn-main" onclick="playAudio()">🔊 再聽一次</button>
-    <button class="btn-main btn-hint" onclick="showHint()">👀 看符號</button>
     <div class="options" id="options"></div>
 </div>
 
 <script>
-    // 1. 在這裡設定你要練習的符號清單
-    const allSymbols = ["ㄅ", "ㄆ", "ㄇ", "ㄈ", "ㄉ", "ㄊ", "ㄋ", "ㄌ"];
-    
-    // 2. 自動產生題庫與音檔對應 (預設音檔為 "符號.mp3")
-    const questions = allSymbols.map(s => ({ symbol: s, audio: s + ".mp3" }));
-
+    const allSymbols = ["ㄅ", "ㄆ", "ㄇ", "ㄈ", "ㄉ", "ㄊ", "ㄋ", "ㄌ", "ㄍ", "ㄎ", "ㄏ"];
+    let pool = []; // 待測題目池
     let currentQ = {};
 
     function playAudio() {
-        const audio = new Audio(currentQ.audio);
-        audio.play();
-    }
-
-    function showHint() {
-        const hint = document.getElementById('hint-display');
-        hint.textContent = currentQ.symbol;
-        setTimeout(() => { hint.textContent = ""; }, 5000);
+        new Audio(currentQ.symbol + ".mp3").play();
     }
 
     function generateQuestion() {
-        // 從題目中隨機挑選一題
-        currentQ = questions[Math.floor(Math.random() * questions.length)];
-        document.getElementById('hint-display').textContent = "";
+        // 如果題目池空了，就重新補滿 (確保全部練習過)
+        if (pool.length === 0) pool = [...allSymbols];
+        
+        // 從題目池隨機抽出一題並移除
+        const randomIndex = Math.floor(Math.random() * pool.length);
+        const symbol = pool.splice(randomIndex, 1)[0];
+        currentQ = { symbol: symbol, audio: symbol + ".mp3" };
+
+        // 自動顯示提示符號 5 秒
+        const hint = document.getElementById('hint-display');
+        hint.textContent = currentQ.symbol;
+        setTimeout(() => { hint.textContent = ""; }, 5000);
         
         const optDiv = document.getElementById('options');
         optDiv.innerHTML = '';
         
-        // 自動產生選項：正確答案 + 3個隨機錯誤答案
         let choices = [currentQ.symbol];
         while(choices.length < 4) {
             let r = allSymbols[Math.floor(Math.random() * allSymbols.length)];
@@ -77,12 +72,11 @@
             new Audio('good.mp3').play();
             setTimeout(generateQuestion, 2000);
         } else {
-            alert("再試一次喔！");
+            alert("再聽一次喔！");
             playAudio();
         }
     }
 
-    // 初始化第一題
     generateQuestion();
 </script>
 </body>
