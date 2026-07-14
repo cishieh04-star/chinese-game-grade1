@@ -8,7 +8,8 @@
     <style>
         body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; background-color: #fdf6e3; height: 100vh; margin: 0; padding-top: 20px; }
         .card { width: 90%; max-width: 400px; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; }
-        .btn-main { padding: 15px; font-size: 20px; background: #2196f3; color: white; border: none; border-radius: 15px; margin: 5px; cursor: pointer; width: 45%; }
+        .btn-main { padding: 20px; font-size: 24px; background: #2e7d32; color: white; border: none; border-radius: 15px; cursor: pointer; width: 100%; }
+        .btn-audio { background: #2196f3; margin-top: 10px; }
         .target-hint { font-size: 80px; font-weight: bold; color: #d84315; height: 100px; margin: 10px; }
         .options { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
         .btn-opt { padding: 20px; font-size: 35px; border: 2px solid #5d4037; border-radius: 15px; background: white; cursor: pointer; }
@@ -16,9 +17,14 @@
 </head>
 <body>
 
-<div class="card">
+<div class="card" id="start-screen">
+    <h1>注音聽力練習</h1>
+    <button class="btn-main" onclick="startApp()">開始遊戲</button>
+</div>
+
+<div class="card" id="game-screen" style="display:none;">
     <div id="hint-display" class="target-hint"></div>
-    <button class="btn-main" onclick="playQuestionAudio()">🔊 再聽一次</button>
+    <button class="btn-main btn-audio" onclick="playQuestionAudio()">🔊 再聽一次</button>
     <div class="options" id="options"></div>
 </div>
 
@@ -27,23 +33,26 @@
     let pool = [];
     let currentQ = {};
 
-    // 播放符號讀音
+    function startApp() {
+        document.getElementById('start-screen').style.display = 'none';
+        document.getElementById('game-screen').style.display = 'block';
+        generateQuestion();
+    }
+
     function playQuestionAudio() {
-        new Audio(currentQ.symbol + ".mp3").play();
+        const audio = new Audio(currentQ.symbol + ".mp3");
+        audio.play();
     }
 
     function generateQuestion() {
         if (pool.length === 0) pool = [...allSymbols];
-        const randomIndex = Math.floor(Math.random() * pool.length);
-        const symbol = pool.splice(randomIndex, 1)[0];
+        const symbol = pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
         currentQ = { symbol: symbol };
 
-        // 顯示提示符號 5 秒
         const hint = document.getElementById('hint-display');
         hint.textContent = currentQ.symbol;
         setTimeout(() => { hint.textContent = ""; }, 5000);
         
-        // 渲染選項
         const optDiv = document.getElementById('options');
         optDiv.innerHTML = '';
         let choices = [currentQ.symbol];
@@ -61,24 +70,20 @@
             optDiv.appendChild(b);
         });
         
-        // 自動播放讀音
-        playQuestionAudio();
+        // 延遲播放，確保音檔有時間準備
+        setTimeout(playQuestionAudio, 800);
     }
 
     function check(val) {
         if(val === currentQ.symbol) {
-            // 撒花效果
             confetti({ particleCount: 150, spread: 100, origin: { y: 0.7 } });
-            // 播放答對聲音
             new Audio('good.mp3').play();
-            setTimeout(generateQuestion, 2500); // 給予撒花與聽聲音的時間
+            setTimeout(generateQuestion, 2500);
         } else {
-            alert("再聽一次喔！");
+            alert("再試一次喔！");
             playQuestionAudio();
         }
     }
-
-    generateQuestion();
 </script>
 </body>
 </html>
