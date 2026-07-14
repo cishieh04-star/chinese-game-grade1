@@ -8,15 +8,19 @@
     <style>
         body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; background-color: #fdf6e3; height: 100vh; margin: 0; padding-top: 20px; }
         .card { width: 90%; max-width: 400px; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; }
-        .btn-main { padding: 20px; font-size: 20px; background: #2196f3; color: white; border: none; border-radius: 15px; margin: 10px; cursor: pointer; width: 80%; }
+        .btn-main { padding: 15px; font-size: 20px; background: #2196f3; color: white; border: none; border-radius: 15px; margin: 5px; cursor: pointer; width: 45%; }
+        .btn-hint { background: #7b1fa2; } /* 提示按鈕顏色 */
+        .target-hint { font-size: 80px; font-weight: bold; color: #d84315; height: 100px; margin: 10px; }
         .options { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
-        .btn-opt { padding: 25px; font-size: 35px; border: 2px solid #5d4037; border-radius: 15px; background: white; cursor: pointer; }
+        .btn-opt { padding: 20px; font-size: 35px; border: 2px solid #5d4037; border-radius: 15px; background: white; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <button class="btn-main" onclick="playAudio()">🔊 點擊聆聽題目</button>
+    <div id="hint-display" class="target-hint"></div>
+    <button class="btn-main" onclick="playAudio()">🔊 再聽一次</button>
+    <button class="btn-main btn-hint" onclick="showHint()">👀 看符號</button>
     <div class="options" id="options"></div>
 </div>
 
@@ -37,7 +41,18 @@
         setTimeout(() => { audio.pause(); }, (zhuyinData[currentQ].end - zhuyinData[currentQ].start) * 1000);
     }
 
-    function renderOptions() {
+    function showHint() {
+        const hint = document.getElementById('hint-display');
+        hint.textContent = zhuyinData[currentQ].symbol;
+        // 5秒後自動消失
+        setTimeout(() => { hint.textContent = ""; }, 5000);
+    }
+
+    function renderQuestion() {
+        // 隨機選題 (不依照順序)
+        currentQ = Math.floor(Math.random() * zhuyinData.length);
+        document.getElementById('hint-display').textContent = "";
+        
         const optDiv = document.getElementById('options');
         optDiv.innerHTML = '';
         
@@ -57,28 +72,21 @@
             optDiv.appendChild(b);
         });
         
-        // 自動播放第一次聽力
-        setTimeout(playAudio, 500);
+        playAudio();
     }
 
     function check(val) {
         if(val === zhuyinData[currentQ].symbol) {
             confetti();
             new Audio('good.mp3').play();
-            
-            // 延遲 2 秒再自動跳下一題，讓小朋友有時間享受答對的喜悅
-            setTimeout(() => { 
-                currentQ = (currentQ + 1) % zhuyinData.length; 
-                renderOptions(); 
-            }, 2000); 
+            setTimeout(renderQuestion, 2000);
         } else {
-            // 答錯時，可以考慮不跳轉，讓小朋友繼續選擇
             alert("再聽一次喔！");
             playAudio();
         }
     }
 
-    renderOptions();
+    renderQuestion();
 </script>
 </body>
 </html>
