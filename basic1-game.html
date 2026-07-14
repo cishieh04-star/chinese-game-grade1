@@ -9,52 +9,39 @@
         body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; background-color: #fdf6e3; height: 100vh; margin: 0; padding-top: 20px; }
         .card { width: 90%; max-width: 400px; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; }
         .btn-main { padding: 20px; font-size: 20px; background: #2196f3; color: white; border: none; border-radius: 15px; margin: 10px; cursor: pointer; width: 80%; }
-        .btn-retry { background: #ff9800; }
         .options { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
-        .btn-opt { padding: 20px; font-size: 30px; border: 2px solid #5d4037; border-radius: 15px; background: white; cursor: pointer; }
+        .btn-opt { padding: 25px; font-size: 35px; border: 2px solid #5d4037; border-radius: 15px; background: white; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="card">
     <button class="btn-main" onclick="playAudio()">🔊 點擊聆聽題目</button>
-    <button class="btn-main btn-retry" onclick="playAudio()">🔄 再聽一次</button>
     <div class="options" id="options"></div>
 </div>
 
 <script>
-    // 你的音檔名稱是 basic-1.mp3
-    // 注意：這裡假設 basic-1.mp3 包含了ㄅ到ㄙ的順序，我們利用時間軸來播放
     const audio = new Audio('basic-1.mp3');
-    
-    // 從你之前解析出的 JSON 時間軸資料
     const zhuyinData = [
         {"symbol": "ㄅ", "start": 0.066, "end": 4.233},
         {"symbol": "ㄆ", "start": 4.766, "end": 9.666},
         {"symbol": "ㄇ", "start": 11.200, "end": 14.833},
         {"symbol": "ㄈ", "start": 15.933, "end": 19.600}
-        // ...這裡可以繼續補完你所有的資料
     ];
 
     let currentQ = 0;
 
     function playAudio() {
-        // 播放當前符號對應的時間段
         audio.currentTime = zhuyinData[currentQ].start;
         audio.play();
-        
-        // 設定定時器，在結束點暫停
-        setTimeout(() => {
-            audio.pause();
-        }, (zhuyinData[currentQ].end - zhuyinData[currentQ].start) * 1000);
+        setTimeout(() => { audio.pause(); }, (zhuyinData[currentQ].end - zhuyinData[currentQ].start) * 1000);
     }
 
     function renderOptions() {
         const optDiv = document.getElementById('options');
         optDiv.innerHTML = '';
         
-        // 隨機選出 4 個注音作為選項
-        const allSymbols = ["ㄅ", "ㄆ", "ㄇ", "ㄈ", "ㄉ", "ㄊ", "ㄋ", "ㄌ"]; 
+        const allSymbols = ["ㄅ", "ㄆ", "ㄇ", "ㄈ"]; 
         let choices = [zhuyinData[currentQ].symbol];
         while(choices.length < 4) {
             let r = allSymbols[Math.floor(Math.random() * allSymbols.length)];
@@ -69,19 +56,25 @@
             b.onclick = () => check(c);
             optDiv.appendChild(b);
         });
+        
+        // 自動播放第一次聽力
+        setTimeout(playAudio, 500);
     }
 
     function check(val) {
         if(val === zhuyinData[currentQ].symbol) {
-            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-            // 答對的音效 (請確認你有一個 good.mp3 檔案)
-            new Audio('good.mp3').play(); 
+            confetti();
+            new Audio('good.mp3').play();
+            
+            // 延遲 2 秒再自動跳下一題，讓小朋友有時間享受答對的喜悅
             setTimeout(() => { 
                 currentQ = (currentQ + 1) % zhuyinData.length; 
                 renderOptions(); 
-            }, 1500);
+            }, 2000); 
         } else {
+            // 答錯時，可以考慮不跳轉，讓小朋友繼續選擇
             alert("再聽一次喔！");
+            playAudio();
         }
     }
 
