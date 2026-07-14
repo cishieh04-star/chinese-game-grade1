@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>注音聽力挑戰</title>
+    <title>注音聽力練習</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; background-color: #fdf6e3; height: 100vh; margin: 0; padding-top: 20px; }
         .card { width: 90%; max-width: 400px; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; }
-        .btn-play { padding: 20px; font-size: 20px; background: #2196f3; color: white; border: none; border-radius: 15px; margin-bottom: 20px; cursor: pointer; }
+        .btn-main { padding: 20px; font-size: 20px; background: #2196f3; color: white; border: none; border-radius: 15px; margin: 10px; cursor: pointer; width: 80%; }
+        .btn-retry { background: #ff9800; }
         .options { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
         .btn-opt { padding: 20px; font-size: 30px; border: 2px solid #5d4037; border-radius: 15px; background: white; cursor: pointer; }
     </style>
@@ -16,29 +17,30 @@
 <body>
 
 <div class="card">
-    <button class="btn-play" onclick="playQuestion()">🔊 聽聽看是什麼？</button>
+    <button class="btn-main" onclick="playQuestion()">🔊 點擊聆聽題目</button>
+    <button class="btn-main btn-retry" onclick="playQuestion()">🔄 再聽一次</button>
     <div class="options" id="options"></div>
 </div>
 
 <script>
-    // 這裡放入你的注音資料與對應的音檔路徑
+    // 定義題目與對應音檔
     const questions = [
         { char: "ㄅ", audio: "ㄅ.mp3" }, 
         { char: "ㄆ", audio: "ㄆ.mp3" },
-        // ...請填入你所有的符號與對應音檔
+        // ...請繼續補完你的題目陣列
     ];
 
     let currentQ = 0;
-    const allChars = ["ㄅ", "ㄆ", "ㄇ", "ㄈ", "ㄉ", "ㄊ", "ㄋ", "ㄌ"]; // 簡化版清單
+    const allChars = ["ㄅ", "ㄆ", "ㄇ", "ㄈ", "ㄉ", "ㄊ", "ㄋ", "ㄌ"]; 
 
     function playQuestion() {
-        const audio = new Audio(questions[currentQ].audio);
-        audio.play();
+        new Audio(questions[currentQ].audio).play();
     }
 
     function renderOptions() {
         const optDiv = document.getElementById('options');
         optDiv.innerHTML = '';
+        
         // 隨機選出 4 個選項
         let choices = [questions[currentQ].char];
         while(choices.length < 4) {
@@ -58,11 +60,14 @@
 
     function check(val) {
         if(val === questions[currentQ].char) {
-            confetti();
-            new Audio('good.mp3').play(); // 播放你的「太棒了」錄音檔
-            setTimeout(() => { currentQ++; renderOptions(); }, 1500);
+            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+            new Audio('good.mp3').play(); 
+            setTimeout(() => { 
+                currentQ = (currentQ + 1) % questions.length; 
+                renderOptions(); 
+            }, 1500);
         } else {
-            alert("再聽一次喔！");
+            alert("再試一次！");
         }
     }
 
