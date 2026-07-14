@@ -2,90 +2,71 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>注音符號挑戰</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>注音聽力挑戰</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; background-color: #fff9c4; padding: 20px; margin: 0; min-height: 100vh; }
-        .card { width: 100%; max-width: 400px; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); text-align: center; }
-        .target-word { font-size: 60px; color: #d84315; margin: 20px 0; font-weight: bold; }
-        .options { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 20px; }
-        .btn { padding: 15px; border: 2px solid #5d4037; border-radius: 12px; font-size: 24px; cursor: pointer; background: white; width: 60px; height: 60px; }
-        #restart-btn { margin-top: 20px; padding: 10px 20px; background: #2e7d32; color: white; border: none; border-radius: 10px; display: none; }
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; background-color: #fdf6e3; height: 100vh; margin: 0; padding-top: 20px; }
+        .card { width: 90%; max-width: 400px; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; }
+        .btn-play { padding: 20px; font-size: 20px; background: #2196f3; color: white; border: none; border-radius: 15px; margin-bottom: 20px; cursor: pointer; }
+        .options { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .btn-opt { padding: 20px; font-size: 30px; border: 2px solid #5d4037; border-radius: 15px; background: white; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div class="card" id="game-screen">
-    <div id="instruction">請點選正確的注音符號：</div>
-    <div class="target-word" id="char-display"></div>
+<div class="card">
+    <button class="btn-play" onclick="playQuestion()">🔊 聽聽看是什麼？</button>
     <div class="options" id="options"></div>
-    <button id="restart-btn" onclick="location.reload()">再玩一次</button>
 </div>
 
 <script>
-    // 建立ㄅ到ㄙ的挑戰序列 (每個步驟只有一個正確答案)
-    const scriptFlow = [
-        { char: "ㄅ" }, { char: "ㄆ" }, { char: "ㄇ" }, { char: "ㄈ" },
-        { char: "ㄉ" }, { char: "ㄊ" }, { char: "ㄋ" }, { char: "ㄌ" },
-        { char: "ㄍ" }, { char: "ㄎ" }, { char: "ㄏ" }, { char: "ㄐ" },
-        { char: "ㄑ" }, { char: "ㄒ" }, { char: "ㄓ" }, { char: "ㄔ" },
-        { char: "ㄕ" }, { char: "ㄖ" }, { char: "ㄗ" }, { char: "ㄘ" }, { char: "ㄙ" }
+    // 這裡放入你的注音資料與對應的音檔路徑
+    const questions = [
+        { char: "ㄅ", audio: "ㄅ.mp3" }, 
+        { char: "ㄆ", audio: "ㄆ.mp3" },
+        // ...請填入你所有的符號與對應音檔
     ];
 
-    const allSymbols = ["ㄅ", "ㄆ", "ㄇ", "ㄈ", "ㄉ", "ㄊ", "ㄋ", "ㄌ", "ㄍ", "ㄎ", "ㄏ", "ㄐ", "ㄑ", "ㄒ", "ㄓ", "ㄔ", "ㄕ", "ㄖ", "ㄗ", "ㄘ", "ㄙ"];
-    let currentIdx = 0;
+    let currentQ = 0;
+    const allChars = ["ㄅ", "ㄆ", "ㄇ", "ㄈ", "ㄉ", "ㄊ", "ㄋ", "ㄌ"]; // 簡化版清單
 
-    function loadStep() {
-        document.getElementById('char-display').textContent = scriptFlow[currentIdx].char;
-        renderButtons();
+    function playQuestion() {
+        const audio = new Audio(questions[currentQ].audio);
+        audio.play();
     }
 
-    function renderButtons() {
-        const optionsDiv = document.getElementById('options');
-        optionsDiv.innerHTML = '';
-        
-        // 隨機選出 3 個選項 (包含正確答案)
-        let choices = [scriptFlow[currentIdx].char];
-        while(choices.length < 3) {
-            let rand = allSymbols[Math.floor(Math.random() * allSymbols.length)];
-            if(!choices.includes(rand)) choices.push(rand);
+    function renderOptions() {
+        const optDiv = document.getElementById('options');
+        optDiv.innerHTML = '';
+        // 隨機選出 4 個選項
+        let choices = [questions[currentQ].char];
+        while(choices.length < 4) {
+            let r = allChars[Math.floor(Math.random() * allChars.length)];
+            if(!choices.includes(r)) choices.push(r);
         }
         choices.sort(() => Math.random() - 0.5);
 
         choices.forEach(c => {
-            const btn = document.createElement('button');
-            btn.className = 'btn';
-            btn.textContent = c;
-            btn.onclick = () => checkAnswer(c);
-            optionsDiv.appendChild(btn);
+            const b = document.createElement('button');
+            b.className = 'btn-opt';
+            b.textContent = c;
+            b.onclick = () => check(c);
+            optDiv.appendChild(b);
         });
     }
 
-    function checkAnswer(val) {
-        if (val === scriptFlow[currentIdx].char) {
-            // 答對效果
-            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-            const msg = new SpeechSynthesisUtterance("太棒了");
-            msg.lang = 'zh-TW';
-            window.speechSynthesis.speak(msg);
-
-            setTimeout(() => {
-                currentIdx++;
-                if (currentIdx < scriptFlow.length) {
-                    loadStep();
-                } else {
-                    document.getElementById('char-display').textContent = "挑戰完成！";
-                    document.getElementById('options').style.display = 'none';
-                    document.getElementById('restart-btn').style.display = 'inline-block';
-                }
-            }, 1000);
+    function check(val) {
+        if(val === questions[currentQ].char) {
+            confetti();
+            new Audio('good.mp3').play(); // 播放你的「太棒了」錄音檔
+            setTimeout(() => { currentQ++; renderOptions(); }, 1500);
         } else {
-            alert("再試一次喔！");
+            alert("再聽一次喔！");
         }
     }
 
-    loadStep();
+    renderOptions();
 </script>
 </body>
 </html>
