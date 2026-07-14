@@ -29,7 +29,10 @@
 </div>
 
 <script>
-    // 根據 SRT 解析出的完整時間軸 [cite: 1]
+    // 1. 預先建立好 Audio 物件，這能確保瀏覽器事先準備好播放器
+    const audio = new Audio('basic-1.mp3');
+    const goodSound = new Audio('good.mp3'); 
+
     const zhuyinData = [
         {"symbol": "ㄅ", "start": 0.066, "end": 4.233}, {"symbol": "ㄆ", "start": 4.766, "end": 9.666},
         {"symbol": "ㄇ", "start": 11.200, "end": 14.833}, {"symbol": "ㄈ", "start": 15.933, "end": 19.600},
@@ -44,14 +47,15 @@
         {"symbol": "ㄙ", "start": 100.833, "end": 104.666}
     ];
 
-    const audio = new Audio('basic-1.mp3');
     let pool = [];
     let currentQ = {};
 
     function startApp() {
         document.getElementById('start-screen').style.display = 'none';
         document.getElementById('game-screen').style.display = 'block';
-        pool = [...zhuyinData]; // 複製一份作為題目池
+        pool = [...zhuyinData];
+        // 預先觸發一次播放以取得行動裝置的聲音權限
+        goodSound.load(); 
         generateQuestion();
     }
 
@@ -94,7 +98,11 @@
     function check(val) {
         if(val === currentQ.symbol) {
             confetti({ particleCount: 150, spread: 100, origin: { y: 0.7 } });
-            new Audio('good.mp3').play();
+            
+            // 使用預先建立的 goodSound 物件
+            goodSound.currentTime = 0; 
+            goodSound.play().catch(e => console.error("播放音效失敗:", e));
+            
             setTimeout(generateQuestion, 2500);
         } else {
             alert("再聽一次喔！");
