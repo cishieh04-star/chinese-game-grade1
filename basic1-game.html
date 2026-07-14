@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>注音聽力練習</title>
+    <title>自動化注音聽力練習</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; background-color: #fdf6e3; height: 100vh; margin: 0; padding-top: 20px; }
         .card { width: 90%; max-width: 400px; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; }
         .btn-main { padding: 15px; font-size: 20px; background: #2196f3; color: white; border: none; border-radius: 15px; margin: 5px; cursor: pointer; width: 45%; }
-        .btn-hint { background: #7b1fa2; } /* 提示按鈕顏色 */
+        .btn-hint { background: #7b1fa2; }
         .target-hint { font-size: 80px; font-weight: bold; color: #d84315; height: 100px; margin: 10px; }
         .options { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
         .btn-opt { padding: 20px; font-size: 35px; border: 2px solid #5d4037; border-radius: 15px; background: white; cursor: pointer; }
@@ -25,39 +25,35 @@
 </div>
 
 <script>
-    const audio = new Audio('basic-1.mp3');
-    const zhuyinData = [
-        {"symbol": "ㄅ", "start": 0.066, "end": 4.233},
-        {"symbol": "ㄆ", "start": 4.766, "end": 9.666},
-        {"symbol": "ㄇ", "start": 11.200, "end": 14.833},
-        {"symbol": "ㄈ", "start": 15.933, "end": 19.600}
-    ];
+    // 1. 在這裡設定你要練習的符號清單
+    const allSymbols = ["ㄅ", "ㄆ", "ㄇ", "ㄈ", "ㄉ", "ㄊ", "ㄋ", "ㄌ"];
+    
+    // 2. 自動產生題庫與音檔對應 (預設音檔為 "符號.mp3")
+    const questions = allSymbols.map(s => ({ symbol: s, audio: s + ".mp3" }));
 
-    let currentQ = 0;
+    let currentQ = {};
 
     function playAudio() {
-        audio.currentTime = zhuyinData[currentQ].start;
+        const audio = new Audio(currentQ.audio);
         audio.play();
-        setTimeout(() => { audio.pause(); }, (zhuyinData[currentQ].end - zhuyinData[currentQ].start) * 1000);
     }
 
     function showHint() {
         const hint = document.getElementById('hint-display');
-        hint.textContent = zhuyinData[currentQ].symbol;
-        // 5秒後自動消失
+        hint.textContent = currentQ.symbol;
         setTimeout(() => { hint.textContent = ""; }, 5000);
     }
 
-    function renderQuestion() {
-        // 隨機選題 (不依照順序)
-        currentQ = Math.floor(Math.random() * zhuyinData.length);
+    function generateQuestion() {
+        // 從題目中隨機挑選一題
+        currentQ = questions[Math.floor(Math.random() * questions.length)];
         document.getElementById('hint-display').textContent = "";
         
         const optDiv = document.getElementById('options');
         optDiv.innerHTML = '';
         
-        const allSymbols = ["ㄅ", "ㄆ", "ㄇ", "ㄈ"]; 
-        let choices = [zhuyinData[currentQ].symbol];
+        // 自動產生選項：正確答案 + 3個隨機錯誤答案
+        let choices = [currentQ.symbol];
         while(choices.length < 4) {
             let r = allSymbols[Math.floor(Math.random() * allSymbols.length)];
             if(!choices.includes(r)) choices.push(r);
@@ -76,17 +72,18 @@
     }
 
     function check(val) {
-        if(val === zhuyinData[currentQ].symbol) {
+        if(val === currentQ.symbol) {
             confetti();
             new Audio('good.mp3').play();
-            setTimeout(renderQuestion, 2000);
+            setTimeout(generateQuestion, 2000);
         } else {
-            alert("再聽一次喔！");
+            alert("再試一次喔！");
             playAudio();
         }
     }
 
-    renderQuestion();
+    // 初始化第一題
+    generateQuestion();
 </script>
 </body>
 </html>
