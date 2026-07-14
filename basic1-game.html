@@ -18,36 +18,34 @@
 
 <div class="card">
     <div id="hint-display" class="target-hint"></div>
-    <button class="btn-main" onclick="playAudio()">🔊 再聽一次</button>
+    <button class="btn-main" onclick="playQuestionAudio()">🔊 再聽一次</button>
     <div class="options" id="options"></div>
 </div>
 
 <script>
-    const allSymbols = ["ㄅ", "ㄆ", "ㄇ", "ㄈ", "ㄉ", "ㄊ", "ㄋ", "ㄌ", "ㄍ", "ㄎ", "ㄏ"];
-    let pool = []; // 待測題目池
+    const allSymbols = ["ㄅ", "ㄆ", "ㄇ", "ㄈ", "ㄉ", "ㄊ", "ㄋ", "ㄌ"];
+    let pool = [];
     let currentQ = {};
 
-    function playAudio() {
+    // 播放符號讀音
+    function playQuestionAudio() {
         new Audio(currentQ.symbol + ".mp3").play();
     }
 
     function generateQuestion() {
-        // 如果題目池空了，就重新補滿 (確保全部練習過)
         if (pool.length === 0) pool = [...allSymbols];
-        
-        // 從題目池隨機抽出一題並移除
         const randomIndex = Math.floor(Math.random() * pool.length);
         const symbol = pool.splice(randomIndex, 1)[0];
-        currentQ = { symbol: symbol, audio: symbol + ".mp3" };
+        currentQ = { symbol: symbol };
 
-        // 自動顯示提示符號 5 秒
+        // 顯示提示符號 5 秒
         const hint = document.getElementById('hint-display');
         hint.textContent = currentQ.symbol;
         setTimeout(() => { hint.textContent = ""; }, 5000);
         
+        // 渲染選項
         const optDiv = document.getElementById('options');
         optDiv.innerHTML = '';
-        
         let choices = [currentQ.symbol];
         while(choices.length < 4) {
             let r = allSymbols[Math.floor(Math.random() * allSymbols.length)];
@@ -63,17 +61,20 @@
             optDiv.appendChild(b);
         });
         
-        playAudio();
+        // 自動播放讀音
+        playQuestionAudio();
     }
 
     function check(val) {
         if(val === currentQ.symbol) {
-            confetti();
+            // 撒花效果
+            confetti({ particleCount: 150, spread: 100, origin: { y: 0.7 } });
+            // 播放答對聲音
             new Audio('good.mp3').play();
-            setTimeout(generateQuestion, 2000);
+            setTimeout(generateQuestion, 2500); // 給予撒花與聽聲音的時間
         } else {
             alert("再聽一次喔！");
-            playAudio();
+            playQuestionAudio();
         }
     }
 
