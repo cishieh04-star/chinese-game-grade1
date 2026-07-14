@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>注音符號學習遊戲</title>
+    <style>
+        body { 
+            font-family: 'PingFang TC', sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            background-color: #fdf6e3; 
+            height: 100vh; 
+            margin: 0; 
+            text-align: center;
+        }
+        .display-area { 
+            font-size: 120px; 
+            color: #5d4037; 
+            font-weight: bold; 
+            margin: 40px; 
+            min-height: 150px;
+        }
+        #status { font-size: 18px; color: #8b4513; margin-bottom: 20px; }
+        .btn-start { 
+            padding: 20px 40px; 
+            font-size: 24px; 
+            background-color: #2e7d32; 
+            color: white; 
+            border: none; 
+            border-radius: 15px; 
+            cursor: pointer; 
+        }
+    </style>
+</head>
+<body>
+
+    <div id="status">載入音檔中...</div>
+    <div class="display-area" id="symbol-display"></div>
+    <button class="btn-start" id="start-btn" style="display:none;" onclick="startLearning()">開始播放</button>
+
+    <script>
+        // 完整的時間軸數據
+        const zhuyinData = [
+            {"symbol": "ㄅ", "start": 0.066, "end": 4.233},
+            {"symbol": "ㄆ", "start": 4.766, "end": 9.666},
+            {"symbol": "ㄇ", "start": 11.200, "end": 14.833},
+            {"symbol": "ㄈ", "start": 15.933, "end": 19.600},
+            {"symbol": "ㄉ", "start": 20.766, "end": 25.166},
+            {"symbol": "ㄊ", "start": 25.800, "end": 30.566},
+            {"symbol": "ㄋ", "start": 31.600, "end": 35.100},
+            {"symbol": "ㄌ", "start": 35.966, "end": 38.966},
+            {"symbol": "ㄍ", "start": 40.833, "end": 44.533},
+            {"symbol": "ㄎ", "start": 45.800, "end": 49.233},
+            {"symbol": "ㄏ", "start": 50.266, "end": 54.900},
+            {"symbol": "ㄐ", "start": 55.700, "end": 59.833},
+            {"symbol": "ㄑ", "start": 60.666, "end": 64.566},
+            {"symbol": "ㄒ", "start": 65.000, "end": 69.900},
+            {"symbol": "ㄓ", "start": 70.700, "end": 75.433},
+            {"symbol": "ㄔ", "start": 76.200, "end": 79.766},
+            {"symbol": "ㄕ", "start": 80.966, "end": 84.800},
+            {"symbol": "ㄖ", "start": 86.566, "end": 89.533},
+            {"symbol": "ㄗ", "start": 90.466, "end": 95.333},
+            {"symbol": "ㄘ", "start": 96.133, "end": 99.466},
+            {"symbol": "ㄙ", "start": 100.833, "end": 104.666}
+        ];
+
+        const audio = new Audio('basic-1.mp3');
+        const display = document.getElementById('symbol-display');
+        const statusText = document.getElementById('status');
+        const startBtn = document.getElementById('start-btn');
+
+        // 音檔載入檢查
+        audio.oncanplaythrough = () => {
+            statusText.textContent = "準備就緒！";
+            startBtn.style.display = "block";
+        };
+
+        audio.onerror = () => {
+            statusText.textContent = "錯誤：找不到 basic-1.mp3 (請確認檔名與位置)";
+            statusText.style.color = "red";
+        };
+
+        function startLearning() {
+            audio.play();
+            startBtn.style.display = "none";
+            statusText.textContent = "聆聽中...";
+        }
+
+        audio.addEventListener('timeupdate', () => {
+            const currentTime = audio.currentTime;
+            const currentItem = zhuyinData.find(item => 
+                currentTime >= item.start && currentTime <= item.end
+            );
+
+            if (currentItem) {
+                display.textContent = currentItem.symbol;
+            } else {
+                display.textContent = "";
+            }
+        });
+
+        audio.onended = () => {
+            statusText.textContent = "學習結束！";
+            startBtn.style.display = "block";
+            startBtn.textContent = "再聽一次";
+        };
+    </script>
+</body>
+</html>
